@@ -30,6 +30,7 @@ struct ContentView: View {
                     .overlay(
                         ForEach(viewModel.widgets) { widget in
                             widget.view
+                                .frame(width: 100, height: 100)
                                 .position(widget.position)
                                 .gesture(
                                     DragGesture()
@@ -47,18 +48,31 @@ struct ContentView: View {
             
             Spacer()
             
-            // Buttons at the bottom
+            // Draggable widgets at the bottom
             HStack {
                 ForEach(viewModel.buttonColors, id: \.self) { color in
                     Circle()
                         .fill(color)
                         .frame(width: 50, height: 50)
-                        .onTapGesture {
-                            viewModel.addWidget(color: color)
-                        }
+                        .gesture(
+                            DragGesture()
+                                .onChanged { gesture in
+                                    viewModel.draggingNewWidget(color: color, at: gesture.location)
+                                }
+                                .onEnded { gesture in
+                                    viewModel.dropNewWidget(color: color, at: gesture.location)
+                                }
+                        )
                 }
             }
             .padding(.bottom)
+            
+            // Display the dragged widget
+            if let draggedWidget = viewModel.draggedWidget {
+                draggedWidget.view
+                    .frame(width: 50, height: 50)
+                    .position(draggedWidget.position)
+            }
         }
     }
 }

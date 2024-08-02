@@ -10,10 +10,11 @@ import Combine
 
 class ContentViewModel: ObservableObject {
     @Published var widgets: [Widget] = []
+    @Published var draggedWidget: Widget?
     let buttonColors: [Color] = [.blue, .pink, .yellow, .green, .orange]
     
-    func addWidget(color: Color) {
-        let newWidget = Widget(id: UUID(), color: color, position: CGPoint(x: 50, y: 50))
+    func addWidget(color: Color, position: CGPoint) {
+        let newWidget = Widget(id: UUID(), color: color, position: position)
         widgets.append(newWidget)
     }
     
@@ -24,12 +25,48 @@ class ContentViewModel: ObservableObject {
     }
     
     func drop(_ widget: Widget, at location: CGPoint) {
-        // Ensure the widget fits within the layout area
         if let index = widgets.firstIndex(where: { $0.id == widget.id }) {
-            let adjustedLocation = CGPoint(x: min(max(location.x, 50), UIScreen.main.bounds.width - 50),
-                                           y: min(max(location.y, 50), 300 - 50))
-            widgets[index].position = adjustedLocation
+            let dropArea = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
+            if dropArea.contains(location) {
+                widgets[index].position = adjustedPosition(for: widget, at: location)
+            } else {
+                widgets.remove(at: index)
+            }
         }
+    }
+    
+    func draggingNewWidget(color: Color, at location: CGPoint) {
+        draggedWidget = Widget(id: UUID(), color: color, position: location)
+    }
+    
+    func dropNewWidget(color: Color, at location: CGPoint) {
+        if let widget = draggedWidget {
+            let dropArea = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
+            if dropArea.contains(location) {
+                addWidget(color: color, position: adjustedPosition(for: widget, at: location))
+            }
+            draggedWidget = nil
+        }
+    }
+    
+    private func adjustedPosition(for widget: Widget, at location: CGPoint) -> CGPoint {
+        // Adjust position to ensure the widget is fully within the drop area
+        var newPosition = location
+        let widgetSize: CGFloat = 100
+        let layoutWidth = UIScreen.main.bounds.width
+        let layoutHeight: CGFloat = 300
+        
+        newPosition.x = max(widgetSize / 2, min(newPosition.x, layoutWidth - widgetSize / 2))
+        newPosition.y = max(widgetSize / 2, min(newPosition.y, layoutHeight - widgetSize / 2))
+        
+        // Avoid overlapping with other widgets
+        for otherWidget in widgets {
+            if widget.id != otherWidget.id && otherWidget.frame.intersects(CGRect(x: newPosition.x - widgetSize / 2, y: newPosition.y - widgetSize / 2, width: widgetSize, height: widgetSize)) {
+                newPosition.y += widgetSize
+            }
+        }
+        
+        return newPosition
     }
 }
 
@@ -38,9 +75,12 @@ struct Widget: Identifiable {
     let color: Color
     var position: CGPoint
     var view: some View {
-        RoundedRectangle(cornerRadius: 36)
+        RoundedRectangle(cornerRadius: 15)
             .fill(color)
-            .frame(width: 100, height: 100)
             .shadow(color: .black.opacity(0.5), radius: 10, x: 2, y: 2)
+    }
+    
+    var frame: CGRect {
+        CGRect(x: position.x - 50, y: position.y - 50, width: 100, height: 100)
     }
 }
