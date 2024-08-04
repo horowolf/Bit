@@ -37,6 +37,7 @@ class ContentViewModel: ObservableObject {
     
     func draggingNewWidget(color: Color, at location: CGPoint) {
         draggedWidget = Widget(id: UUID(), color: color, position: location)
+        print("position: \(location)")
     }
     
     func dropNewWidget(color: Color, at location: CGPoint) {
