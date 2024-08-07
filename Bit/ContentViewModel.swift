@@ -11,10 +11,12 @@ import Combine
 class ContentViewModel: ObservableObject {
     @Published var widgets: [Widget] = []
     @Published var draggedWidget: Widget?
+    @Published var isDragging = false
+    @Published var draggedColor: Color?
     let buttonColors: [Color] = [.blue, .pink, .yellow, .green, .orange]
     
-    func addWidget(color: Color, position: CGPoint) {
-        let newWidget = Widget(id: UUID(), color: color, position: position)
+    func addWidget(color: Color, position: CGPoint, size: CGSize) {
+        let newWidget = Widget(id: UUID(), color: color, position: position, size: size)
         widgets.append(newWidget)
     }
     
@@ -26,9 +28,10 @@ class ContentViewModel: ObservableObject {
     
     func drop(_ widget: Widget, at location: CGPoint, in rectangleFrame: CGRect) {
         if let index = widgets.firstIndex(where: { $0.id == widget.id }) {
-            let adjustedLocation = CGPoint(x: location.x - rectangleFrame.origin.x, y: location.y - rectangleFrame.origin.y)
+            let adjustedLocation = CGPoint(x: rectangleFrame.width / 2, y: rectangleFrame.height / 2)
             if rectangleFrame.contains(location) {
                 widgets[index].position = adjustedPosition(for: widget, at: adjustedLocation, in: rectangleFrame.size)
+                widgets[index].size = CGSize(width: rectangleFrame.width, height: rectangleFrame.height)
             } else {
                 widgets.remove(at: index)
             }
@@ -36,17 +39,21 @@ class ContentViewModel: ObservableObject {
     }
     
     func draggingNewWidget(color: Color, at location: CGPoint) {
-        draggedWidget = Widget(id: UUID(), color: color, position: location)
-        print("position: \(location)")
+        draggedWidget = Widget(id: UUID(), color: color, position: location, size: CGSize(width: 50, height: 50))
+        draggedColor = color
+        isDragging = true
     }
     
     func dropNewWidget(color: Color, at location: CGPoint, in rectangleFrame: CGRect) {
         if let widget = draggedWidget {
-            let adjustedLocation = CGPoint(x: location.x - rectangleFrame.origin.x, y: location.y - rectangleFrame.origin.y)
+            let adjustedLocation = CGPoint(x: rectangleFrame.width / 2, y: rectangleFrame.height / 2)
             if rectangleFrame.contains(location) {
-                addWidget(color: color, position: adjustedPosition(for: widget, at: adjustedLocation, in: rectangleFrame.size))
+                let newPosition = adjustedPosition(for: widget, at: adjustedLocation, in: rectangleFrame.size)
+                addWidget(color: color, position: newPosition, size: CGSize(width: rectangleFrame.width, height: rectangleFrame.height))
             }
             draggedWidget = nil
+            draggedColor = nil
+            isDragging = false
         }
     }
     
@@ -57,8 +64,8 @@ class ContentViewModel: ObservableObject {
         let layoutWidth = layoutSize.width
         let layoutHeight = layoutSize.height
         
-        newPosition.x = max(widgetSize / 2, min(newPosition.x, layoutWidth - widgetSize / 2))
-        newPosition.y = max(widgetSize / 2, min(newPosition.y, layoutHeight - widgetSize / 2))
+        newPosition.x = layoutWidth / 2
+        newPosition.y = layoutHeight / 2
         
         // Avoid overlapping with other widgets
         for otherWidget in widgets {
@@ -75,13 +82,14 @@ struct Widget: Identifiable {
     let id: UUID
     let color: Color
     var position: CGPoint
+    var size: CGSize
     var view: some View {
-        RoundedRectangle(cornerRadius: 15)
+        RoundedRectangle(cornerRadius: 25)
             .fill(color)
             .shadow(color: .black.opacity(0.5), radius: 10, x: 2, y: 2)
     }
     
     var frame: CGRect {
-        CGRect(x: position.x - 50, y: position.y - 50, width: 100, height: 100)
+        CGRect(x: position.x - size.width / 2, y: position.y - size.height / 2, width: size.width, height: size.height)
     }
 }

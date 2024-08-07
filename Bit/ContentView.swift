@@ -48,17 +48,8 @@ struct ContentView: View {
                         .overlay(
                             ForEach(viewModel.widgets) { widget in
                                 widget.view
-                                    .frame(width: 100, height: 100)
+                                    .frame(width: widget.size.width, height: widget.size.height)
                                     .position(widget.position)
-                                    .gesture(
-                                        DragGesture()
-                                            .onChanged { gesture in
-                                                viewModel.dragging(widget, to: gesture.location)
-                                            }
-                                            .onEnded { gesture in
-                                                viewModel.drop(widget, at: gesture.location, in: rectangleFrame)
-                                            }
-                                    )
                             }
                         )
                 }
@@ -76,7 +67,7 @@ struct ContentView: View {
                     HStack(spacing: 20) {  // 增加 widget 之間的間距
                         ForEach(viewModel.buttonColors, id: \.self) { color in
                             Circle()
-                                .fill(color)
+                                .fill(color.opacity(viewModel.isDragging && viewModel.draggedColor == color ? 0.2 : 1.0))
                                 .frame(width: 50, height: 50)
                                 .gesture(
                                     DragGesture(coordinateSpace: .named("full screen"))
@@ -95,7 +86,7 @@ struct ContentView: View {
             // Display the dragged widget on top of everything
             if let draggedWidget = viewModel.draggedWidget {
                 draggedWidget.view
-                    .frame(width: 50, height: 50)
+                    .frame(width: draggedWidget.size.width, height: draggedWidget.size.height)
                     .position(draggedWidget.position)
             }
         }
