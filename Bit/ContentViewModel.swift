@@ -24,11 +24,11 @@ class ContentViewModel: ObservableObject {
         }
     }
     
-    func drop(_ widget: Widget, at location: CGPoint) {
+    func drop(_ widget: Widget, at location: CGPoint, in rectangleFrame: CGRect) {
         if let index = widgets.firstIndex(where: { $0.id == widget.id }) {
-            let dropArea = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
-            if dropArea.contains(location) {
-                widgets[index].position = adjustedPosition(for: widget, at: location)
+            let adjustedLocation = CGPoint(x: location.x - rectangleFrame.origin.x, y: location.y - rectangleFrame.origin.y)
+            if rectangleFrame.contains(location) {
+                widgets[index].position = adjustedPosition(for: widget, at: adjustedLocation, in: rectangleFrame.size)
             } else {
                 widgets.remove(at: index)
             }
@@ -40,22 +40,22 @@ class ContentViewModel: ObservableObject {
         print("position: \(location)")
     }
     
-    func dropNewWidget(color: Color, at location: CGPoint) {
+    func dropNewWidget(color: Color, at location: CGPoint, in rectangleFrame: CGRect) {
         if let widget = draggedWidget {
-            let dropArea = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 300)
-            if dropArea.contains(location) {
-                addWidget(color: color, position: adjustedPosition(for: widget, at: location))
+            let adjustedLocation = CGPoint(x: location.x - rectangleFrame.origin.x, y: location.y - rectangleFrame.origin.y)
+            if rectangleFrame.contains(location) {
+                addWidget(color: color, position: adjustedPosition(for: widget, at: adjustedLocation, in: rectangleFrame.size))
             }
             draggedWidget = nil
         }
     }
     
-    private func adjustedPosition(for widget: Widget, at location: CGPoint) -> CGPoint {
+    private func adjustedPosition(for widget: Widget, at location: CGPoint, in layoutSize: CGSize) -> CGPoint {
         // Adjust position to ensure the widget is fully within the drop area
         var newPosition = location
         let widgetSize: CGFloat = 100
-        let layoutWidth = UIScreen.main.bounds.width
-        let layoutHeight: CGFloat = 300
+        let layoutWidth = layoutSize.width
+        let layoutHeight = layoutSize.height
         
         newPosition.x = max(widgetSize / 2, min(newPosition.x, layoutWidth - widgetSize / 2))
         newPosition.y = max(widgetSize / 2, min(newPosition.y, layoutHeight - widgetSize / 2))

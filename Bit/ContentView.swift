@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel = ContentViewModel()
+    @State private var rectangleFrame: CGRect = .zero
     
     var body: some View {
         ZStack { // 使用 ZStack 包住整個視圖
@@ -21,6 +22,13 @@ struct ContentView: View {
                         .fill(Color.white)
                         .frame(height: 300)
                         .border(Color.gray, width: 2)
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear.onAppear {
+                                    self.rectangleFrame = geometry.frame(in: .named("full screen"))
+                                }
+                            }
+                        )
                         .overlay(
                             ForEach(viewModel.widgets) { widget in
                                 widget.view
@@ -32,7 +40,7 @@ struct ContentView: View {
                                                 viewModel.dragging(widget, to: gesture.location)
                                             }
                                             .onEnded { gesture in
-                                                viewModel.drop(widget, at: gesture.location)
+                                                viewModel.drop(widget, at: gesture.location, in: rectangleFrame)
                                             }
                                     )
                             }
@@ -61,7 +69,7 @@ struct ContentView: View {
                                         viewModel.draggingNewWidget(color: color, at: gesture.location)
                                     }
                                     .onEnded { gesture in
-                                        viewModel.dropNewWidget(color: color, at: gesture.location)
+                                        viewModel.dropNewWidget(color: color, at: gesture.location, in: rectangleFrame)
                                     }
                             )
                     }
