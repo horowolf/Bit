@@ -13,7 +13,7 @@ class ContentViewModel: ObservableObject {
     @Published var draggedWidget: Widget?
     @Published var isDragging = false
     @Published var draggedColor: Color?
-    let buttonColors: [Color] = [.blue, .pink, .yellow, .green, .orange]
+    let buttonColors: [Color] = [.skyBlue, .hotPink, .brightYellow, .limeGreen, .vibrantOrange]
     
     func addWidget(color: Color, position: CGPoint, size: CGSize) {
         let newWidget = Widget(id: UUID(), color: color, position: position, size: size)

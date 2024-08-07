@@ -12,15 +12,14 @@ struct ContentView: View {
     @State private var rectangleFrame: CGRect = .zero
     
     var body: some View {
-        ZStack { // 使用 ZStack 包住整個視圖
+        ZStack {
             VStack {
                 Spacer()
                 
-                // Layout area for widgets
                 ZStack {
                     VStack {
                         Text("👋")
-                            .font(.system(size: 64))  // 放大 "👋"
+                            .font(.system(size: 64))
                             .padding()
                             .frame(alignment: .center)
                         Text("Hi! Drag and drop your widgets to unleash your creativity!")
@@ -57,14 +56,13 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                // Draggable widgets at the bottom
                 ZStack {
                     RoundedRectangle(cornerRadius: 36.0)
                         .fill(Color.white)
                         .frame(height: 72.0)
                         .shadow(radius: 10)
                         .padding()
-                    HStack(spacing: 20) {  // 增加 widget 之間的間距
+                    HStack(spacing: 20) {
                         ForEach(viewModel.buttonColors, id: \.self) { color in
                             Circle()
                                 .fill(color.opacity(viewModel.isDragging && viewModel.draggedColor == color ? 0.2 : 1.0))
@@ -83,7 +81,6 @@ struct ContentView: View {
                 }
             }
             
-            // Display the dragged widget on top of everything
             if let draggedWidget = viewModel.draggedWidget {
                 draggedWidget.view
                     .frame(width: draggedWidget.size.width, height: draggedWidget.size.height)
