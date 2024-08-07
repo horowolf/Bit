@@ -18,10 +18,26 @@ struct ContentView: View {
                 
                 // Layout area for widgets
                 ZStack {
-                    Rectangle()
-                        .fill(Color.white)
+                    VStack {
+                        Text("👋")
+                            .font(.system(size: 64))  // 放大 "👋"
+                            .padding()
+                            .frame(alignment: .center)
+                        Text("Hi! Drag and drop your widgets to unleash your creativity!")
+                            .font(.headline)
+                            .foregroundColor(Color.gray)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    
+                    RoundedRectangle(cornerRadius: 25.0)
+                        .fill(Color.clear)
                         .frame(height: 300)
-                        .border(Color.gray, width: 2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 25.0)
+                                .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
+                                .foregroundColor(.gray)
+                        )
                         .background(
                             GeometryReader { geometry in
                                 Color.clear.onAppear {
@@ -45,36 +61,35 @@ struct ContentView: View {
                                     )
                             }
                         )
-                    
-                    Text("👋 Hi! Drag and drop your widgets to unleash your creativity!")
-                        .font(.headline)
-                        .foregroundColor(Color.gray)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    
                 }
                 .padding()
                 
                 Spacer()
                 
                 // Draggable widgets at the bottom
-                HStack {
-                    ForEach(viewModel.buttonColors, id: \.self) { color in
-                        Circle()
-                            .fill(color)
-                            .frame(width: 50, height: 50)
-                            .gesture(
-                                DragGesture(coordinateSpace: .named("full screen"))
-                                    .onChanged { gesture in
-                                        viewModel.draggingNewWidget(color: color, at: gesture.location)
-                                    }
-                                    .onEnded { gesture in
-                                        viewModel.dropNewWidget(color: color, at: gesture.location, in: rectangleFrame)
-                                    }
-                            )
+                ZStack {
+                    RoundedRectangle(cornerRadius: 36.0)
+                        .fill(Color.white)
+                        .frame(height: 72.0)
+                        .shadow(radius: 10)
+                        .padding()
+                    HStack(spacing: 20) {  // 增加 widget 之間的間距
+                        ForEach(viewModel.buttonColors, id: \.self) { color in
+                            Circle()
+                                .fill(color)
+                                .frame(width: 50, height: 50)
+                                .gesture(
+                                    DragGesture(coordinateSpace: .named("full screen"))
+                                        .onChanged { gesture in
+                                            viewModel.draggingNewWidget(color: color, at: gesture.location)
+                                        }
+                                        .onEnded { gesture in
+                                            viewModel.dropNewWidget(color: color, at: gesture.location, in: rectangleFrame)
+                                        }
+                                )
+                        }
                     }
                 }
-                .padding(.bottom)
             }
             
             // Display the dragged widget on top of everything
