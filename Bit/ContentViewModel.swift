@@ -58,23 +58,59 @@ class ContentViewModel: ObservableObject {
     }
     
     private func adjustedPosition(for widget: Widget, at location: CGPoint, in layoutSize: CGSize) -> CGPoint {
-        // Adjust position to ensure the widget is fully within the drop area
         var newPosition = location
-        let widgetSize: CGFloat = 100
-        let layoutWidth = layoutSize.width
-        let layoutHeight = layoutSize.height
         
-        newPosition.x = layoutWidth / 2
-        newPosition.y = layoutHeight / 2
-        
-        // Avoid overlapping with other widgets
+        // 初始位置為圓角矩形中心
+        newPosition.x = layoutSize.width / 2
+        newPosition.y = layoutSize.height / 2
+
+        // 檢查新 widget 是否在已存在的 widget 範圍內
         for otherWidget in widgets {
-            if widget.id != otherWidget.id && otherWidget.frame.intersects(CGRect(x: newPosition.x - widgetSize / 2, y: newPosition.y - widgetSize / 2, width: widgetSize, height: widgetSize)) {
-                newPosition.y += widgetSize
+            if widget.id != otherWidget.id && otherWidget.frame.contains(newPosition) {
+                // 根據 newWidget 的位置來決定與 oldWidget 的對齊方式
+                if abs(newPosition.x - otherWidget.position.x) > abs(newPosition.y - otherWidget.position.y) { // left or right
+                    newPosition.y = otherWidget.position.y
+                    balance(y: newPosition.y, layoutSize: layoutSize)
+                } else { // top or botton
+                    newPosition.x = otherWidget.position.x
+                    balance(x: newPosition.x, layoutSize: layoutSize)
+                }
             }
         }
         
         return newPosition
+    }
+
+    private func balance(x: CGFloat? = nil, y: CGFloat? = nil, layoutSize: CGSize) {
+        if let x = x { // top or botton case
+            var pickedWidgets = widgets.filter { $0.position.x == x }
+            
+            // 確保所有 widget 是連接的，計算總高度
+            let totalHeight = pickedWidgets.reduce(0) { $0 + $1.size.height }
+            let newHeight = layoutSize.height / CGFloat(pickedWidgets.count)
+            
+            // 調整每個 widget 的中心和大小
+            var currentY: CGFloat = 0
+            for i in 0..<pickedWidgets.count {
+                pickedWidgets[i].size.height = newHeight
+                pickedWidgets[i].position.y = currentY + newHeight / 2
+                currentY += newHeight
+            }
+        } else if let y = y { // left or right case
+            var pickedWidgets = widgets.filter { $0.position.y == y }
+            
+            // 確保所有 widget 是連接的，計算總寬度
+            let totalWidth = pickedWidgets.reduce(0) { $0 + $1.size.width }
+            let newWidth = layoutSize.width / CGFloat(pickedWidgets.count)
+            
+            // 調整每個 widget 的中心和大小
+            var currentX: CGFloat = 0
+            for i in 0..<pickedWidgets.count {
+                pickedWidgets[i].size.width = newWidth
+                pickedWidgets[i].position.x = currentX + newWidth / 2
+                currentX += newWidth
+            }
+        }
     }
 }
 
